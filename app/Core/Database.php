@@ -1,14 +1,25 @@
 <?php
+
 class Database {
     private static $instance = null;
     private $pdo;
 
     private function __construct() {
-        $this->pdo = new PDO("mysql:host=localhost;dbname=gearlog_db", "root", "");
+        $host = "localhost";
+        $dbname = "gearlog_db";
+        $user = "root";
+        $pass = "";
+
+        $this->pdo = new PDO(
+            "mysql:host=$host;dbname=$dbname;charset=utf8",
+            $user,
+            $pass
+        );
+
         $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     }
 
-    public static function connect() {
+    public static function getInstance() {
         if (!self::$instance) {
             self::$instance = new Database();
         }

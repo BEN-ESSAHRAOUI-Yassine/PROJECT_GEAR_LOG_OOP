@@ -1,39 +1,78 @@
 <?php
-require_once __DIR__ . '/../Models/User.php';
+require_once "../app/Models/User.php";
+require_once "../app/Core/Controller.php";
 
-class UserController {
-    private $model;
+class UserController extends Controller {
 
-    public function __construct() {
-        $this->model = new User();
+    private function checkAdmin() {
+        session_start();
+        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'Admin') {
+            die("Access denied");
+        }
     }
 
     public function index() {
-        $users = $this->model->all();
-        require '../views/users/index.php';
+        $this->checkAdmin();
+
+        $userModel = new User();
+        $users = $userModel->all();
+
+        require "../views/users/index.php";
     }
 
     public function create() {
-        require '../views/users/form.php';
-    }
+        $this->checkAdmin();
 
-    public function store() {
-        $this->model->create($_POST);
-        header("Location: index.php?controller=user");
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+            $userModel = new User();
+
+            $userModel->create([
+                'u' => $_POST['username'],
+                'e' => $_POST['email'],
+                'p' => password_hash($_POST['password'], PASSWORD_DEFAULT),
+                'r' => $_POST['role']
+            ]);
+
+            header("Location: index.php?action=users");
+            exit;
+        }
+
+        require "../views/users/create.php";
     }
 
     public function edit() {
-        $user = $this->model->find($_GET['id']);
-        require '../views/users/form.php';
-    }
+        $this->checkAdmin();
 
-    public function update() {
-        $this->model->update($_GET['id'], $_POST);
-        header("Location: index.php?controller=user");
+        $id = $_GET['id'];
+
+        $userModel = new User();
+        $user = $userModel->find($id);
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+            $userModel->update([
+                'email' => $_POST['email'],
+                'role'  => $_POST['role'],
+                'id'    => $id
+            ]);
+
+            header("Location: index.php?action=users");
+            exit;
+        }
+
+        require "../views/users/edit.php";
     }
 
     public function delete() {
-        $this->model->delete($_GET['id']);
-        header("Location: index.php?controller=user");
+        $this->checkAdmin();
+
+        $id = $_GET['id'];
+
+        $userModel = new User();
+        $userModel->delete($id);
+
+        header("Location: index.php?action=users");
+        exit;
     }
 }

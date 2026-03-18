@@ -1,34 +1,49 @@
 <?php
-require_once __DIR__ . '/../Core/Database.php';
+require_once "../app/Core/Database.php";
 
 class User {
-    private $db;
+    private $pdo;
 
     public function __construct() {
-        $this->db = Database::connect();
+        $this->pdo = Database::getInstance();
     }
 
-    public function all() {
-        return $this->db->query("SELECT * FROM user_db")->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    public function find($id) {
-        $stmt = $this->db->prepare("SELECT * FROM user_db WHERE id=?");
-        $stmt->execute([$id]);
+    public function findByUsername($username) {
+        $stmt = $this->pdo->prepare(
+            "SELECT * FROM User_db WHERE username=:username"
+        );
+        $stmt->execute(['username'=>$username]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function create($data) {
-        $stmt = $this->db->prepare("INSERT INTO user_db (name,email,role) VALUES (?,?,?)");
-        return $stmt->execute([$data['name'],$data['email'],$data['role']]);
+    public function all() {
+        return $this->pdo->query("SELECT * FROM User_db")
+            ->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function update($id,$data) {
-        $stmt = $this->db->prepare("UPDATE user_db SET name=?, email=?, role=? WHERE id=?");
-        return $stmt->execute([$data['name'],$data['email'],$data['role'],$id]);
+    public function create($data) {
+        $stmt = $this->pdo->prepare(
+            "INSERT INTO User_db(username,email,password,his_role)
+             VALUES(:u,:e,:p,:r)"
+        );
+        return $stmt->execute($data);
+    }
+
+    public function find($id) {
+        $stmt = $this->pdo->prepare("SELECT * FROM User_db WHERE id=:id");
+        $stmt->execute(['id'=>$id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function update($data) {
+        $stmt = $this->pdo->prepare(
+            "UPDATE User_db SET email=:email, his_role=:role WHERE id=:id"
+        );
+        return $stmt->execute($data);
     }
 
     public function delete($id) {
-        return $this->db->prepare("DELETE FROM user_db WHERE id=?")->execute([$id]);
+        $stmt = $this->pdo->prepare("DELETE FROM User_db WHERE id=:id");
+        return $stmt->execute(['id'=>$id]);
     }
 }
